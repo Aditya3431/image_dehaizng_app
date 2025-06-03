@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dehaze Photo | AI Tool</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9fafb;
+    }
+    .dehaze-container {
+      text-align: center;
+      padding: 3rem 1rem;
+    }
+    .dehaze-form {
+      margin-top: 1rem;
+    }
+    input[type="file"] {
+      margin: 1rem 0;
+    }
+    button {
+      padding: 0.7rem 1.5rem;
+      background-color: #1d4ed8;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .image-preview {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+    .image-preview img {
+      max-width: 400px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+    }
+    #loader {
+      margin-top: 1rem;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="dehaze-container">
+    <h1>🧼 AI Image Dehazer</h1>
+    <p>Upload a hazy photo and let our AI clean it for you!</p>
+    <form class="dehaze-form" enctype="multipart/form-data" method="post" onsubmit="handleUpload(event)">
+      <input type="file" id="fileInput" accept="image/*" required>
+      <br>
+      <button type="submit">Dehaze Now</button>
+    </form>
+    <div id="loader">⏳ Processing...</div>
+    <div class="image-preview">
+      <div>
+        <h3>Original</h3>
+        <img id="originalImage" src="" alt="Original Image">
+      </div>
+      <div>
+        <h3>Dehazed</h3>
+        <img id="dehazedImage" src="" alt="Dehazed Image">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function handleUpload(event) {
+      event.preventDefault();
+
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      // Preview original
+      const reader = new FileReader();
+      reader.onload = e => {
+        document.getElementById('originalImage').src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+
+      // Prepare form data
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Show loader
+      document.getElementById('loader').style.display = 'block';
+      document.getElementById('dehazedImage').src = "";
+
+      // POST to FastAPI backend
+      const response = await fetch('/dehaze/', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await response.json();
+
+      // Show dehazed image
+      document.getElementById('loader').style.display = 'none';
+      document.getElementById('dehazedImage').src = `data:image/png;base64,${data.dehazed_image}`;
+    }
+  </script>
+</body>
+</html>
