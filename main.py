@@ -29,10 +29,22 @@ async def root(request: Request):
     return templates.TemplateResponse("landingpage.html", {"request": request})
 
 def dehaze_image(image: Image.Image) -> Image.Image:
-    return image  # Replace with ML logic
+    # For now, just return the original image (this will be replaced with actual dehazing logic)
+    return image.convert('RGB')  # Convert to RGB to ensure consistent format
 
-@app.post("/dehaze/")
-async def dehaze(file: UploadFile = File(...)):
+@app.route("/dehaze", methods=["GET", "POST"])
+async def dehaze(request: Request):
+    """Handle both form display and image processing"""
+    if request.method == "GET":
+        # Render the form page
+        return templates.TemplateResponse("index.html", {"request": request})
+    
+    # Handle POST request with image upload
+    form = await request.form()
+    file = form.get("file")
+    if not file:
+        return JSONResponse(content={"error": "No file uploaded"}, status_code=400)
+
     image_bytes = await file.read()
     image = Image.open(io.BytesIO(image_bytes))
     output_image = dehaze_image(image)
